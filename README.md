@@ -13,15 +13,15 @@ hopefully land in Hyper 0.10.
 Here is how you use the Hyper Service API:
 
 ```rust
-extern crate tokio;
+extern crate tokio_service;
 extern crate futures;
 
 #[macro_use]
 extern crate hyper;
 extern crate tokio_hyper as http;
 
-use tokio::Service;
-use futures::{Future, finished};
+use tokio_service::Service;
+use futures::{Future, finished, BoxFuture};
 use std::thread;
 use std::time::Duration;
 
@@ -32,7 +32,7 @@ impl Service for MyService {
     type Req = http::Message<http::Request>;
     type Resp = http::Message<http::Response>;
     type Error = http::Error;
-    type Fut = Box<Future<Item = Self::Resp, Error = http::Error>>;
+    type Fut = BoxFuture<Self::Resp, http::Error>;
 
     fn call(&self, req: Self::Req) -> Self::Fut {
         println!("REQUEST: {:?}", req);
@@ -48,7 +48,7 @@ impl Service for MyService {
 
 pub fn main() {
     http::Server::new()
-        .serve(MyService)
+        .serve(|| MyService)
         .unwrap();
 
     thread::sleep(Duration::from_secs(1_000_000));
